@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <title>Document</title>
+</head>
+<body>
+    <main>
+        <div id="search">
+            <input id="searchInput" placeholder="Search city">
+            <button id="searchButton">Search</button>
+        </div>
+        <div>
+            <p id="errorsHolder">Errors info</p>
+        </div>
+        <div id="location"></div>
+        <div id="temperaturePlusIcon">
+            <p id="temperature"> </p>
+            <img id="weatherImg" alt="weatherImg">
+        </div>
+        <div id="weatherConditions"></div>
+
+    </div>
+    <script>
+        searchButton.addEventListener("click", function()
+        {
+            const searchInput = document.querySelector("#searchInput");
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${searchInput.value}&appid=7b5cbb6bb21d0fc862c3b47a3b967ddf&units=metric`
+            loadWeather(url);
+        })
+        function getCoords()
+        {
+            navigator.geolocation.getCurrentPosition(
+            function(position)
+            {
+                const lat = position.coords.latitude.toFixed(2);
+                const long = position.coords.longitude.toFixed(2);
+                const url = `http://api.openweathermap.org/data/2.5/weather?APPID=7b5cbb6bb21d0fc862c3b47a3b967ddf&lat=${lat}&lon=${long}&units=metric`
+                
+                loadWeather(url);
+
+            })
+        }
+        getCoords();
+        
+        async function loadWeather(url)
+        {
+            try
+            {
+                const response = await fetch(url);
+                const json = await response.json();
+
+                const location = `${json["name"]}, ${json["sys"]["country"]}` ;
+                const temperature = `${Math.round(json["main"]["temp"])} ℃`;
+                const description = `${json["weather"][0]["main"]}`;
+                const feelsLike = `Feels like: ${Math.round(json["main"]["feels_like"])} ℃`;
+                const pressure = `Pressure: ${Math.round(json["main"]["pressure"])}`;
+                const humidity = `Humidity: ${Math.round(json["main"]["humidity"])} %`;
+                const src = `http://openweathermap.org/img/wn/${json["weather"][0]["icon"]}@2x.png`
+
+                changeVisibility("#errorsHolder", "hidden");
+
+                ClearData(`#location`);
+                PrintText(`#location`, location, '')
+
+                ClearData('#temperature');
+                PrintText('#temperature', temperature, '')
+
+                ClearData('#weatherConditions');
+                PrintText('#weatherConditions', description, '.')
+                PrintText(`#weatherConditions`, feelsLike, '.')
+                PrintText(`#weatherConditions`, pressure, '.')
+                PrintText(`#weatherConditions`, humidity, '.')
+
+                PrintIcon('#weatherImg', src)
+            }
+            catch(err)
+            {
+                changeVisibility("#errorsHolder", "visible");
+                ClearData('#errorsHolder');
+                PrintText("#errorsHolder", 'Something goes wrong. Please try again', '')
+            }
+        }
+        function PrintText(selector, data, separator)
+        {
+            const element = document.querySelector(selector);
+            const text = document.createTextNode(`${data}${separator} `);
+            element.append(text);
+        }
+        function PrintIcon(selector, src)
+        {
+            const img = document.querySelector(selector);
+            img.src = src;
+        }
+        function ClearData(selector)
+        {
+            const element = document.querySelector(selector);
+            element.innerHTML = '';
+        }
+        function changeVisibility(selector, state)
+        {
+            const element = document.querySelector(selector);
+            element.style.visibility = state;
+        }
+</script>
+</body>
+</html>
